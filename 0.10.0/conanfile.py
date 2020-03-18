@@ -11,8 +11,8 @@ class RabbitmqCConan(ConanFile):
     author = 'Simon Lepasteur <simon.lepasteur@swissdotnet.ch>'
     url = 'https://github.com/swissdotnet-sa/conan-rabbitmq-c'
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False]}
-    default_options = {"shared": False}
+    options = {"shared": [True, False], "SSL": [True, False]}
+    default_options = {"shared": False, "SSL": True}
     generators = "cmake"
     exports_sources = "CMakeLists.txt"
     _archive_subfolder = homepage.rsplit('/', 1)[-1] + "-" + version
@@ -26,12 +26,17 @@ class RabbitmqCConan(ConanFile):
         
     
     # Library requirements.
-    #def requirements(self):
-    #    self.requires("boost/[>=1.69.0]")
+    def requirements(self):
+        if self.options.SSL:
+            self.requires("openssl/1.0.2s")
 
         
     def build(self):
         cmake = CMake(self)
+        cmake.definitions["BUILD_EXAMPLES"] = False
+        cmake.definitions["BUILD_TESTS"] = False
+        cmake.definitions["BUILD_TOOLS"] = False
+        cmake.definitions["ENABLE_SSL_SUPPORT"] = self.options.SSL
         cmake.configure()
         cmake.build()
         #cmake.parallel = False
@@ -49,3 +54,4 @@ class RabbitmqCConan(ConanFile):
         
     def package_info(self):
         self.cpp_info.libs = tools.collect_libs(self)
+
